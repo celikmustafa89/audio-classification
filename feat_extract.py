@@ -15,19 +15,24 @@ from matplotlib.pyplot import specgram
 import soundfile as sf
 import sounddevice as sd
 import queue
+from tqdm import tqdm
+import warnings
+warnings.filterwarnings("ignore")
 
 def extract_feature(file_name=None):
-    if file_name: 
-        print('Extracting', file_name)
-        X, sample_rate = sf.read(file_name, dtype='float32')
-    else:  
+    if file_name:
+        #print('Extracting', file_name)
+        #X, sample_rate = sf.read(file_name, dtype='float32')
+        #X, sample_rate = sf.read(file_name, dtype="float64")
+        X, sample_rate = librosa.load(file_name)
+    else:
         device_info = sd.query_devices(None, 'input')
         sample_rate = int(device_info['default_samplerate'])
         q = queue.Queue()
         def callback(i,f,t,s): q.put(i.copy())
         data = []
         with sd.InputStream(samplerate=sample_rate, callback=callback):
-            while True: 
+            while True:
                 if len(data) < 100000: data.extend(q.get())
                 else: break
         X = np.array(data)
@@ -53,13 +58,13 @@ def extract_feature(file_name=None):
     tonnetz = np.mean(librosa.feature.tonnetz(y=librosa.effects.harmonic(X), sr=sample_rate).T,axis=0)
     return mfccs,chroma,mel,contrast,tonnetz
 
-def parse_audio_files(parent_dir,file_ext='*.ogg'):
+def parse_audio_files(parent_dir,file_ext='*.mp3'):
     sub_dirs = os.listdir(parent_dir)
     sub_dirs.sort()
     features, labels = np.empty((0,193)), np.empty(0)
-    for label, sub_dir in enumerate(sub_dirs):
+    for label, sub_dir in tqdm(enumerate(sub_dirs)):
         if os.path.isdir(os.path.join(parent_dir, sub_dir)):
-            for fn in glob.glob(os.path.join(parent_dir, sub_dir, file_ext)):
+            for fn in tqdm(glob.glob(os.path.join(parent_dir, sub_dir, file_ext)), desc="loading label " + sub_dir):
                 try: mfccs, chroma, mel, contrast,tonnetz = extract_feature(fn)
                 except Exception as e:
                     print("[Error] extract feature error in %s. %s" % (fn,e))
@@ -71,7 +76,7 @@ def parse_audio_files(parent_dir,file_ext='*.ogg'):
             print("extract %s features done" % (sub_dir))
     return np.array(features), np.array(labels, dtype = np.int)
 
-def parse_predict_files(parent_dir,file_ext='*.ogg'):
+def parse_predict_files(parent_dir,file_ext='*.mp3'):
     features = np.empty((0,193))
     filenames = []
     for fn in glob.glob(os.path.join(parent_dir, file_ext)):
@@ -84,12 +89,12 @@ def parse_predict_files(parent_dir,file_ext='*.ogg'):
 
 def main():
     # Get features and labels
-    features, labels = parse_audio_files('data')
+    features, labels = parse_audio_files('/Users/celik/media/cat_sounds/development')
     np.save('feat.npy', features)
     np.save('label.npy', labels)
 
     # Predict new
-    features, filenames = parse_predict_files('predict')
+    features, filenames = parse_predict_files('/Users/celik/media/cat_sounds/small_development/predict/Angry')
     np.save('predict_feat.npy', features)
     np.save('predict_filenames.npy', filenames)
 

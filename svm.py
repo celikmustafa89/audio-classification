@@ -5,15 +5,12 @@
 #
 
 import numpy as np
-import sklearn
-from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import classification_report
+from sklearn.svm import SVC
 
 # Load data from numpy file
-X =  np.load('feat.npy')
-y =  np.load('label.npy').ravel()
+X = np.load('data/feat.npy')
+y = np.load('data/label.npy').ravel()
 
 # Split data into training and test subsets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=0)

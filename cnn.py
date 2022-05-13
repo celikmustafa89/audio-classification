@@ -22,13 +22,13 @@ import os.path as op
 from sklearn.model_selection import train_test_split
 
 def train(args):
-    if not op.exists('feat.npy') or not op.exists('label.npy'):
+    if not op.exists('data/feat.npy') or not op.exists('data/label.npy'):
         if input('No feature/labels found. Run feat_extract.py first? (Y/n)').lower() in ['y', 'yes', '']:
             feat_extract.main()
             train(args)
     else:
-        X = np.load('feat.npy')
-        y = np.load('label.npy').ravel()
+        X = np.load('data/feat.npy')
+        y = np.load('data/label.npy').ravel()
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=233)
 

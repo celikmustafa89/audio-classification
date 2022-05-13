@@ -12,8 +12,8 @@ from keras.optimizers import SGD
 from sklearn.model_selection import train_test_split
 
 # Prepare the data
-X =  np.load('feat.npy')
-y =  np.load('label.npy').ravel()
+X =  np.load('data/feat.npy')
+y =  np.load('data/label.npy').ravel()
 
 num_classes = np.max(y, axis=0)
 
